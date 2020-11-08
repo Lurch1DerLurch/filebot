@@ -80,7 +80,7 @@ for f in found_files:
     fname = f.split("/")[-1] 
 
     if fname not in dlist:
-        print("Downloading " + fname + "...", end=" ")
+        print("Downloading " + fname + "...", end=" ", flush=True)
 
         r = rq.get(PATHURL + f)
 
