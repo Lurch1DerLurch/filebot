@@ -80,7 +80,7 @@ for f in found_files:
     fname = f.split("/")[-1] 
 
     if fname not in dlist:
-        print("Downloading " + fname + "...")
+        print("Downloading " + fname + "...", end=" ")
 
         r = rq.get(PATHURL + f)
 
@@ -93,6 +93,8 @@ for f in found_files:
         dfstream = open(DFILE, 'a+')
         dfstream.write(fname + '\n')
         dfstream.close()
+
+        print("complete!")
 
     else:
         print(fname + " already exists!")
