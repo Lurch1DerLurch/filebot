@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import requests as rq
+from http.client import responses
 import os
 
 
@@ -16,26 +17,35 @@ except FileExistsError:
 # DFILE contains the past of .dfile, which keeps track of already-downloaded files.
 DFILE = DIR+"/.dfile"
 
-# URL of the website that is to be scraped.
-URL = "https://www.math.uni-bonn.de/people/gmartin/AlgebraicGeometryWS2020.html"
+# URL of the website.
+URL = "google.com"
 
 # URL for relative paths.
-PATHURL = "URL"
+PATHURL = URL
 if not URL.endswith("/"):
     PATHURL = ""
     sp = URL.split("/")[:-1]
     for s in sp:
         PATHURL += s + "/"
 
-print(PATHURL)
 
 
 # TYPELIST is the list of desired filetypes.
 TYPELIST = ["pdf", "djvu"]
 
+# follow links to extern URLs:
+FOLLOW_EXTERN = False
 
 
 ### Algorithm starts here ###
+
+# load URL
+print("Looking for files on " + PATHURL, end="... ")
+try:
+    r = rq.get(URL)
+    print("Status code {}".format(r.status_code))
+except:
+    print("Connection failed!")
 
 # Check if .dfile exists
 if not os.path.exists(DFILE):
@@ -50,19 +60,19 @@ dlist = [x[:-1] for x in dlist] # remove '\n' from every character in list
 dirfilestream.close()
 
 
+
 # Scrape URL source
-r = rq.get(URL)
 source = r.text # source is a string, containing the source code of URL.
 source_split = source.split("\"")[1:]
 candidates = [sp.split("\"")[0] for sp in source_split] # candidates contains everything within quotes
 
 
-# found_files will contain all files referenced on by website
+# found_files will contain all files referenced on by website source, with fitting endings
 found_files = [] 
 
 # filter for canditates with correct file type
 for c in candidates: 
-    if "//" in c:
+    if "//" in c and not FOLLOW_EXTERN:
         continue
 
     flag = False  # flag to check filetypes
@@ -76,13 +86,16 @@ for c in candidates:
 
 # Download files
 for f in found_files: 
-    # At this point, elements in found_files might still contain '/'s. this is bad. fname removes those.
+    # At this point, elements in found_files might still contain '/'s. This causes conflicts. In fname, these are removed.
     fname = f.split("/")[-1] 
 
     if fname not in dlist:
         print("Downloading " + fname + "...", end=" ", flush=True)
 
         r = rq.get(PATHURL + f)
+        if r.status_code != 200:
+            print("failed! Message: \"" + str(r.status_code) + ": " + responses[r.status_code] + "\"")
+            continue
 
         # write content to file
         s = open(DIR+fname, 'wb')
