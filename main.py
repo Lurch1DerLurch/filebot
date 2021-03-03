@@ -18,7 +18,7 @@ except FileExistsError:
 DFILE = DIR+"/.dfile"
 
 # URL of the website.
-URL = "google.com"
+URL = "http://www.math.uni-bonn.de/people/mihatsch/ant/"
 
 # URL for relative paths.
 PATHURL = URL
@@ -56,7 +56,7 @@ if not os.path.exists(DFILE):
 # load content of .dfile into dlist
 dirfilestream = open(DFILE, 'r')
 dlist = dirfilestream.readlines() # .split('\n') 
-dlist = [x[:-1] for x in dlist] # remove '\n' from every character in list
+dlist = [x[:-1] for x in dlist] # remove '\n' from every the end of every entry
 dirfilestream.close()
 
 
@@ -90,9 +90,15 @@ for f in found_files:
     fname = f.split("/")[-1] 
 
     if fname not in dlist:
-        print("Downloading " + fname + "...", end=" ", flush=True)
+        print("Trying to download " + fname + "...", end=" ", flush=True)
 
-        r = rq.get(PATHURL + f)
+        if "//" in f:
+            PURL = f
+        else:
+            PURL = PATHURL + f
+
+        r = rq.get(PURL)
+
         if r.status_code != 200:
             print("failed! Message: \"" + str(r.status_code) + ": " + responses[r.status_code] + "\"")
             continue
@@ -104,7 +110,7 @@ for f in found_files:
 
         # append to .dfile
         dfstream = open(DFILE, 'a+')
-        dfstream.write(fname + '\n')
+        dfstream.write(PURL + '\n')
         dfstream.close()
 
         print("complete!")
